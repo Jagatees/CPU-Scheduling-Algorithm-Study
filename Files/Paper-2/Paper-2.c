@@ -147,6 +147,8 @@ int main() {
     int current_time = 0;
     int num_processes;
     int max_burst_time = 0;
+    int context_switch_count = -1;
+
 
     // Input the number of processes
     printf("Input no. of processes: ");
@@ -202,6 +204,7 @@ int main() {
         // If remaining time of the process is less than or equal to quantum time
         if (process->remaining_time <= quantum_time) {
             printf("Assigning CPU to Process ID: %d\n", process->process_id);
+            context_switch_count++;
             process->waiting_time = current_time - process->arrival_time;
             current_time += process->remaining_time;
             process->turnaround_time = current_time - process->arrival_time;
@@ -224,12 +227,14 @@ int main() {
             }
         } else {
             // Move the process to the tail of the ready queue
+            context_switch_count++;
             printf("Moving Process ID: %d to Tail\n", head->process->process_id);
             tail->next = head;
             tail = head;
             head = head->next;
             tail->next = NULL;
             remaining_processes++;
+
         }
         
         // If the number of remaining processes equals the size of the ready queue, reset quantum time
@@ -251,6 +256,7 @@ int main() {
     printf("\n");
     printf("Average Waiting Time: %.2f\n", calculate_average_waiting_time(process_list, num_processes));
     printf("Average Turnaround Time: %.2f\n", calculate_average_turnaround_time(process_list, num_processes));
+    printf("Total number of context switches: %d\n", context_switch_count);
 
     // Free allocated memory
     free(process_list);
