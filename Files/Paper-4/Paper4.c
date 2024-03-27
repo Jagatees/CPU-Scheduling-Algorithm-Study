@@ -1,6 +1,6 @@
 // Paper 4: An Improved Round Robin Algorithm for an Efficient CPU Scheduling
 // Chin Hui Min 2301941
-// Lab P2 
+// Lab P2 Team 3
 
 #include <stdio.h>
 #include <stdlib.h>
