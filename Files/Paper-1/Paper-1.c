@@ -19,28 +19,44 @@ typedef struct {
     bool flag; // flag
 } Process;
 
+typedef struct {
+    int id; // process id
+    int ct; // current time
+} gantChart;
+
+int compare(const void *a, const void *b)
+{
+    Process *p1 = (Process *)a;
+    Process *p2 = (Process *)b;
+
+    // Sort by arrival time
+    if (p1->at != p2->at)
+        return p1->at - p2->at;
+
+    // If arrival times are the same, sort by burst time < 20% of time quantum
+    if (p1->bt < 0.2 * p1->tq && p2->bt >= 0.2 * p2->tq)
+        return -1;
+    if (p1->bt >= 0.2 * p1->tq && p2->bt < 0.2 * p2->tq)
+        return 1;
+
+    // If both burst times are less than 20% of the time quantum or neither is, sort by process ID
+    return p1->id - p2->id;
+}
+
 void roundRobin(Process processes[], int n)
 {
     int currentTime = 0;
     int contextSwitches = 0;
 
-    int gantChart[MAX_PROCESS][2];
+    gantChart gantchart[MAX_PROCESS];
 
-    // Sort the queue by arrival time 
-    for (int i = 0; i < n-1; i++) {
-        for (int j = 0; j < n-i-1; j++) {
-            if (processes[j].at > processes[j+1].at) {
-
-                Process temp = processes[j];
-                processes[j] = processes[j+1];
-                processes[j+1] = temp;
-            }
-        }
-    }
+    // Sort the current array by arrival time and burst time
+    qsort(processes, n, sizeof(Process), compare);
 
     // Traverse the queue until all processes is completed
     while(1)
     {
+        // Assume all processes are done 
         bool done = true;
 
         for (int i = 0; i < n; i++)
@@ -48,19 +64,22 @@ void roundRobin(Process processes[], int n)
             // Check if the process is not completed and has arrived
             if (processes[i].flag == false && processes[i].at <= currentTime)
             {
+                // There is a process that is not done
                 done = false;
-
-                // Calculate the individual waiting time and turnaround time
+                
+                // Check if remaining time is lesser or equal to time quantum
                 if (processes[i].rt <= processes[i].tq) 
                 {
                     processes[i].flag = true;
-
+                    
                     currentTime += processes[i].rt;
 
+                    // Calculate the individual waiting time and turnaround time
                     processes[i].wt = currentTime - processes[i].bt - processes[i].at;
                     processes[i].tat = currentTime - processes[i].at;
                     
                     processes[i].rt = 0;
+
                 } 
                 else if (processes[i].rt > processes[i].tq && processes[i].rt <= (processes[i].tq + (30 * processes[i].tq/100)) && processes[i].p == 3) 
                 {
@@ -69,8 +88,10 @@ void roundRobin(Process processes[], int n)
                     
                     currentTime += processes[i].rt;
 
+                    // Calculate the individual waiting time and turnaround time
                     processes[i].wt = currentTime - processes[i].bt - processes[i].at;
                     processes[i].tat = currentTime - processes[i].at;
+
                     processes[i].rt = 0;
                 } 
                 else if (processes[i].rt > processes[i].tq && processes[i].rt <= (processes[i].tq + (20 * processes[i].tq/100)) && (processes[i].p == 2 || processes[i].p == 1)) 
@@ -79,7 +100,8 @@ void roundRobin(Process processes[], int n)
                     processes[i].flag = true;
 
                     currentTime += processes[i].rt;
-                    
+
+                    // Calculate the individual waiting time and turnaround time
                     processes[i].wt = currentTime - processes[i].bt - processes[i].at;
                     processes[i].tat = currentTime - processes[i].at;
                     
@@ -87,12 +109,17 @@ void roundRobin(Process processes[], int n)
                 } 
                 else 
                 {
+                    // Calculate the individual waiting time and turnaround time
                     processes[i].wt = currentTime - processes[i].bt - processes[i].at;
                     processes[i].tat = currentTime - processes[i].at;
                     processes[i].rt -= processes[i].tq;
                     currentTime += processes[i].tq;
                 }
 
+                gantchart[contextSwitches].id =  processes[i].id;
+                gantchart[contextSwitches].ct =  currentTime;
+                
+                // Record each context switch
                 contextSwitches++;
             }
         }
@@ -131,15 +158,26 @@ void roundRobin(Process processes[], int n)
     // Display the results
     printf("\nProcess\tBurst Time\tArrival Time\tPriority\tWaiting Time\tTurnaround Time\tTime Quantum\n");
     for (int i = 0; i < n; i++) {
-        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].bt, processes[i].at, processes[i].p, processes[i].wt, processes[i].tat, processes[i].tq);
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].bt, 
+        processes[i].at, processes[i].p, processes[i].wt, processes[i].tat, processes[i].tq);
     }
 
+    // Display average waiting time and turnaround time
     printf("\nAverage Waiting Time: %.2f", avgWT);
     printf("\nAverage Turnaround Time: %.2f", avgTat);
-    printf("\n"); // New line
+    printf("\n"); 
 
+    // Display number of context switches
     printf("\nNumber of context switches: %d", contextSwitches-1);
-    printf("\n"); // New line
+    printf("\n"); 
+    printf("\n"); 
+
+    // Show the gant chart of the process 
+    for (int i = 0; i < contextSwitches; i++)
+    {
+        printf("| %d (%d)| ", gantchart[i].id, gantchart[i].ct);
+    }
+
 }
 
 int main() {
@@ -174,20 +212,24 @@ int main() {
     // Assign the appropriate time quantum based on priority
     for (int i = 0; i < noOfProcesses; i++) 
     {
+        // High priority
         if (processes[i].p == 3)
         {
             processes[i].tq = timeQuantum + (20 * timeQuantum/100);
         }
+        // Medium priority
         else if (processes[i].p == 2)
         {
             processes[i].tq = timeQuantum;
         }
+        // Low priority 
         else if (processes[i].p == 1)
         {
             processes[i].tq = timeQuantum - (20 * timeQuantum/100);
         }
     }
 
+    // Start the algorithm
     roundRobin(processes, noOfProcesses);
 
     return 0;
