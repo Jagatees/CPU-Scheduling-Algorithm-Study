@@ -1,3 +1,7 @@
+// Paper 5: Adaptive Round Robin Scheduling using Shortest Burst Approach Based on Smart Time Slice
+// Tan Yan An 2301908
+// Lab P2 Team 3
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
