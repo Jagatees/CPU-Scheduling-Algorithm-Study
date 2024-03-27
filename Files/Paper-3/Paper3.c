@@ -1,3 +1,7 @@
+// Paper 3: Improved Round Robin Scheduling Algorithm WIth Varying Time Quantum
+// See Xue Kai 2301818
+// Lab P2
+
 #include <stdio.h>
 #include <stdlib.h>
 
