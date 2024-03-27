@@ -1,5 +1,6 @@
-// Paper 1
+// Paper 1: Improved Round Robin CPU Scheduling Algorithm using the combination of Priority, Shortest Job First and Round Robin algorithm
 // Chua Shing Ying 2301932
+// Lab P2 Team 3
 
 #include<stdio.h>
 #include<stdlib.h>
