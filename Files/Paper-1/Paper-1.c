@@ -1,3 +1,6 @@
+// Paper 1
+// Chua Shing Ying 2301932
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
